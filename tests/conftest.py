@@ -1,12 +1,14 @@
 """Shared fixtures: every test gets its own temporary SQLite file (docs/testing.md)."""
 
 import sqlite3
-from collections.abc import Iterator
+from collections.abc import Callable, Iterator
 from contextlib import contextmanager
 from pathlib import Path
 
 import pytest
 from alembic import command
+from fastapi import FastAPI
+from fastapi.routing import APIRoute
 from fastapi.testclient import TestClient
 
 from app.main import create_app
@@ -27,10 +29,20 @@ def table_names(database_path: Path) -> set[str]:
 
 
 @contextmanager
-def running_app(database_path: Path) -> Iterator[TestClient]:
+def running_app(
+    database_path: Path, configure: Callable[[FastAPI], None] | None = None
+) -> Iterator[TestClient]:
     """The app with its lifespan running (engine disposed on exit — Windows keeps files locked)."""
-    with TestClient(create_app(Settings(database_path=database_path))) as client:
+    app = create_app(Settings(database_path=database_path))
+    if configure is not None:
+        configure(app)
+    with TestClient(app) as client:
         yield client
+
+
+def add_test_route(app: FastAPI, path: str, endpoint: Callable[[], object]) -> None:
+    """Insert a test-only GET route ahead of every other route (the static mount catches all)."""
+    app.router.routes.insert(0, APIRoute(path, endpoint, methods=["GET"]))
 
 
 @pytest.fixture

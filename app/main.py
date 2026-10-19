@@ -5,7 +5,7 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 
-from app.platform import health
+from app.platform import health, http
 from app.platform.db import create_app_engine
 from app.platform.schema import latest_revisions
 from app.platform.settings import Settings
@@ -32,5 +32,6 @@ def create_app(settings: Settings) -> FastAPI:
     app.state.settings = settings
     app.state.engine = engine
     app.state.latest_revisions = latest_revisions()
+    http.install(app)
     app.include_router(health.router)
     return app
