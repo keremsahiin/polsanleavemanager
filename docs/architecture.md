@@ -13,6 +13,10 @@ modül sınırları araçla (import-linter) korunur — bkz. ADR 0001 ve ADR 000
 Kod yerleşimi:
 - `app/modules/<modül>/public.py` — modülün dışarıya açık tek arayüzü (fonksiyonlar, DTO'lar).
 - `app/modules/<modül>/internal/` — modülün iç kodu; `internal/domain/` saf iş kurallarıdır.
+- `app/platform/` — modüllerin altındaki ortak altyapı (ayarlar, veritabanı bağlantısı, HTTP hata
+  deseni, istek log'u, güvenlik başlıkları, sağlık sinyalleri). İş kuralı içermez; modülleri import
+  etmez. `app/main.py` uygulamayı birleştirir (composition root).
+- `migrations/` — Alembic şema göçleri (şemayı değiştirmenin tek yolu).
 - `app/static/` — frontend (build adımı yok, ES modülleri, `fetch` ile `/api`).
 - `tests/unit`, `tests/integration`, `tests/e2e` — bkz. `docs/testing.md`.
 
@@ -25,6 +29,7 @@ Kod yerleşimi:
 | `calendar` | Şirket bazında hangi günün iş günü olduğunu söylemek | Çalışma günü düzeni, resmi tatiller, arife (yarım gün) |
 | `leave` | İzin talebi yaşam döngüsü ve bakiye | İzin türleri, talepler, onay/ret/iptal, hakediş, bakiye hareketleri, ek gün tanımları |
 | `audit` | Değişmez denetim kaydı | Denetim olayları (kim, ne zaman, neyi, önce/sonra) |
+| `app/platform` (modül değil) | Tüm modüllerin kullandığı teknik altyapı | Hiçbir iş verisi; yalnız şema sürüm bilgisi |
 
 ## Communication rules
 - Modüller arası iletişim **yalnız senkron, doğrudan fonksiyon çağrısıdır** ve yalnız hedef
@@ -45,7 +50,9 @@ Kod yerleşimi:
 3. **Saf domain:** `app.modules.*.internal.domain` paketleri `fastapi`, `starlette`,
    `sqlalchemy`, `alembic`, `sqlite3`, `uvicorn`, `httpx` import edemez; saat/tarih "şimdi"yi
    kendisi okumaz, parametre olarak alır.
-4. **Frontend iş kuralı hesaplamaz** (bakiye, gün sayısı, yetki) — araçla denetlenemez, code
+4. **Platform iş modüllerine bağımlı değildir:** `app.platform` hiçbir `app.modules` paketini
+   import edemez (forbidden sözleşmesi); modüller platformu kullanabilir.
+5. **Frontend iş kuralı hesaplamaz** (bakiye, gün sayısı, yetki) — araçla denetlenemez, code
    review'da kontrol edilir.
 
 ## Deliberately out of scope

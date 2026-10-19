@@ -47,7 +47,9 @@
 ## Dependencies
 - Her yeni bağımlılık (runtime veya dev) planda adı, amacı ve lisansıyla listelenir ve plan
   onayıyla birlikte insan tarafından onaylanır. Onaysız `uv add` yasak.
-- Kabul edilen lisanslar: MIT, BSD, Apache-2.0, PSF, ISC. Diğerleri ADR gerektirir.
+- Kabul edilen lisanslar: MIT, BSD, Apache-2.0, PSF, ISC, MPL-2.0 (değiştirilmeden kullanılır;
+  ADR 0003). GPL ailesi kabul edilmez. Diğerleri ADR gerektirir. Kontrol geçişli bağımlılıkları da
+  kapsar.
 - Sürümler `uv.lock` ile sabittir; check `--locked` ile çalışır (kilit dosyası güncel değilse
   kırmızı).
 - Bilinen açık taraması: `pip-audit`, CI'da `check`'ten ayrı bir job olarak (ağ gerektirdiği için
