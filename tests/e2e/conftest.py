@@ -10,6 +10,7 @@ import sys
 import time
 import urllib.request
 from collections.abc import Iterator
+from dataclasses import dataclass
 from pathlib import Path
 
 import pytest
@@ -61,8 +62,14 @@ def _stop(server: subprocess.Popen[bytes]) -> None:
         server.wait(timeout=STOP_TIMEOUT_S)
 
 
+@dataclass(frozen=True)
+class LiveServer:
+    url: str
+    log_file: Path  # everything the process writes to stdout/stderr, unbuffered
+
+
 @pytest.fixture(scope="session")
-def base_url(tmp_path_factory: pytest.TempPathFactory) -> Iterator[str]:
+def live_server(tmp_path_factory: pytest.TempPathFactory) -> Iterator[LiveServer]:
     """The real entry point (python -m app) on a free loopback port, with a migrated database."""
     work_dir = tmp_path_factory.mktemp("e2e")
     database_path = work_dir / "plm.db"
@@ -74,6 +81,7 @@ def base_url(tmp_path_factory: pytest.TempPathFactory) -> Iterator[str]:
         "PLM_HOST": "127.0.0.1",
         "PLM_PORT": str(port),
         "PYTHONUTF8": "1",
+        "PYTHONUNBUFFERED": "1",  # log lines reach server.log as they are written
     }
     log_file = work_dir / "server.log"
     with log_file.open("wb") as log:
@@ -83,9 +91,14 @@ def base_url(tmp_path_factory: pytest.TempPathFactory) -> Iterator[str]:
         try:
             url = f"http://127.0.0.1:{port}"
             _wait_until_live(url, server, log_file)
-            yield url
+            yield LiveServer(url=url, log_file=log_file)
         finally:
             _stop(server)
+
+
+@pytest.fixture(scope="session")
+def base_url(live_server: LiveServer) -> str:
+    return live_server.url
 
 
 @pytest.fixture(scope="session")
