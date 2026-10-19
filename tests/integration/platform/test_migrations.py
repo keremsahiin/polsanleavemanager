@@ -1,7 +1,9 @@
 import sqlite3
+import threading
 from pathlib import Path
 
 from sqlalchemy import text
+from sqlalchemy.pool import QueuePool
 
 from app.platform.db import create_app_engine
 from app.platform.schema import current_revisions, latest_revisions
@@ -46,3 +48,31 @@ def test_app_engine_enforces_foreign_keys_and_wal(migrated_database: Path) -> No
             assert connection.execute(text("PRAGMA journal_mode")).scalar_one() == "wal"
     finally:
         engine.dispose()
+
+
+def test_app_engine_serves_more_threads_than_pool_size_at_once(migrated_database: Path) -> None:
+    """Review #1: FastAPI's thread pool runs >5 requests at once; every one keeps its connection."""
+    threads = 8  # above SQLAlchemy's default pool_size of 5
+    engine = create_app_engine(migrated_database)
+    barrier = threading.Barrier(threads)
+    errors: list[BaseException] = []
+
+    def hold_connection_and_query() -> None:
+        try:
+            with engine.connect() as connection:
+                barrier.wait(timeout=10)  # all connections are open at the same time
+                assert connection.execute(text("SELECT 1")).scalar_one() == 1
+                barrier.wait(timeout=10)
+        except BaseException as exc:  # collected and asserted below
+            errors.append(exc)
+
+    workers = [threading.Thread(target=hold_connection_and_query) for _ in range(threads)]
+    try:
+        for worker in workers:
+            worker.start()
+        for worker in workers:
+            worker.join(timeout=30)
+    finally:
+        engine.dispose()
+    assert errors == []
+    assert isinstance(engine.pool, QueuePool)

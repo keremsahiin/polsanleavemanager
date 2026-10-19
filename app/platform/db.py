@@ -4,7 +4,7 @@ import sqlite3
 from pathlib import Path
 
 from sqlalchemy import Engine, create_engine, event
-from sqlalchemy.pool import ConnectionPoolEntry
+from sqlalchemy.pool import ConnectionPoolEntry, QueuePool
 
 
 def create_app_engine(database_path: Path) -> Engine:
@@ -12,10 +12,13 @@ def create_app_engine(database_path: Path) -> Engine:
     uri = database_path.resolve().as_uri() + "?mode=rw"
 
     def connect() -> sqlite3.Connection:
-        # FastAPI runs sync endpoints in a thread pool; the pool hands connections across threads.
+        # FastAPI runs sync endpoints in a thread pool; QueuePool hands a pooled connection to
+        # whichever thread checks it out next, so the connection must not be bound to one thread.
         return sqlite3.connect(uri, uri=True, check_same_thread=False)
 
-    return _with_pragmas(create_engine("sqlite://", creator=connect))
+    # Explicit QueuePool: a "sqlite://" URL looks like an in-memory database to SQLAlchemy, which
+    # would pick SingletonThreadPool — that closes in-use connections beyond pool_size threads.
+    return _with_pragmas(create_engine("sqlite://", creator=connect, poolclass=QueuePool))
 
 
 def create_migration_engine(database_path: Path) -> Engine:
