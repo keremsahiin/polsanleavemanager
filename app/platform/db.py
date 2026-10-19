@@ -18,12 +18,17 @@ def create_app_engine(database_path: Path) -> Engine:
 
     # Explicit QueuePool: a "sqlite://" URL looks like an in-memory database to SQLAlchemy, which
     # would pick SingletonThreadPool — that closes in-use connections beyond pool_size threads.
-    return _with_pragmas(create_engine("sqlite://", creator=connect, poolclass=QueuePool))
+    # hide_parameters: error text (logged on a 500) must not carry bound values such as names or
+    # e-mail addresses (docs/security.md, Input & output).
+    return _with_pragmas(
+        create_engine("sqlite://", creator=connect, poolclass=QueuePool, hide_parameters=True)
+    )
 
 
 def create_migration_engine(database_path: Path) -> Engine:
     """Engine for Alembic: creates the file when it does not exist yet (spec 0001, AC-3)."""
-    return _with_pragmas(create_engine(f"sqlite:///{database_path.resolve().as_posix()}"))
+    url = f"sqlite:///{database_path.resolve().as_posix()}"
+    return _with_pragmas(create_engine(url, hide_parameters=True))
 
 
 def _with_pragmas(engine: Engine) -> Engine:

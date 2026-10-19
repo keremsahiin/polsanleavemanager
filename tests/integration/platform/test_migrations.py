@@ -2,7 +2,9 @@ import sqlite3
 import threading
 from pathlib import Path
 
+import pytest
 from sqlalchemy import text
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.pool import QueuePool
 
 from app.platform.db import create_app_engine
@@ -76,3 +78,20 @@ def test_app_engine_serves_more_threads_than_pool_size_at_once(migrated_database
         engine.dispose()
     assert errors == []
     assert isinstance(engine.pool, QueuePool)
+
+
+def test_database_errors_do_not_carry_bound_values(migrated_database: Path) -> None:
+    """Review #5 / docs/security.md: error text (logged on 500) must not contain personal data."""
+    with sqlite3.connect(migrated_database) as connection:
+        connection.execute("CREATE TABLE people (email TEXT UNIQUE)")
+    connection.close()
+    engine = create_app_engine(migrated_database)
+    insert = text("INSERT INTO people (email) VALUES (:email)")
+    try:
+        with engine.begin() as connection:
+            connection.execute(insert, {"email": "ali.veli@example.com"})
+        with pytest.raises(IntegrityError) as excinfo, engine.begin() as connection:
+            connection.execute(insert, {"email": "ali.veli@example.com"})
+    finally:
+        engine.dispose()
+    assert "ali.veli@example.com" not in str(excinfo.value)
