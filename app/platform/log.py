@@ -34,3 +34,6 @@ def configure_logging() -> None:
     root = logging.getLogger()
     root.handlers = [handler]
     root.setLevel(logging.INFO)
+    # Readiness reads the schema version through alembic, which logs two INFO lines per call; one
+    # request must stay one log line (spec 0001 R-8). Warnings and errors still come through.
+    logging.getLogger("alembic").setLevel(logging.WARNING)

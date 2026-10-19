@@ -2,7 +2,7 @@ import json
 import logging
 import sys
 
-from app.platform.log import JsonFormatter
+from app.platform.log import JsonFormatter, configure_logging
 
 
 def _record(**extra: object) -> logging.LogRecord:
@@ -54,3 +54,18 @@ def test_exception_is_included() -> None:
         record.exc_info = sys.exc_info()
     entry = json.loads(JsonFormatter().format(record))
     assert "RuntimeError: boom" in entry["exception"]
+
+
+def test_configure_logging_keeps_alembic_info_out_of_request_logs() -> None:
+    """Review #3 / R-8: readiness reads the schema version through alembic, which logs at INFO."""
+    root = logging.getLogger()
+    alembic = logging.getLogger("alembic")
+    saved = (root.handlers[:], root.level, alembic.level)
+    try:
+        configure_logging()
+        assert alembic.getEffectiveLevel() == logging.WARNING
+        assert not alembic.isEnabledFor(logging.INFO)
+        assert logging.getLogger("app.request").isEnabledFor(logging.INFO)
+    finally:
+        root.handlers[:], root.level = saved[0], saved[1]
+        alembic.setLevel(saved[2])
