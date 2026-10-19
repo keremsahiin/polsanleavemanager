@@ -13,16 +13,18 @@
   sahte verilir.
 - `tests/integration/<modül>/` — FastAPI `TestClient` ile gerçek API + gerçek SQLite: her test
   geçici bir DB dosyası alır, şema Alembic göçleriyle kurulur (`create_all` değil).
-- `tests/e2e/` — Playwright for Python (`pytest-playwright`), headless Chromium, tek worker;
-  `@pytest.mark.e2e` ile işaretlenir. **Test edilen uygulamanın yaşam döngüsünün tek sahibi**
-  `tests/e2e/conftest.py` içindeki session kapsamlı fixture'dır: uvicorn'u geçici DB ile boş bir
-  portta başlatır, hazır olmasını bekler ve test başarısız olsa ya da zaman aşımına uğrasa bile
-  `finally` içinde süreci sonlandırır.
+- `tests/e2e/` — Playwright for Python (pytest eklentisi olmadan, ADR 0003), headless Chromium,
+  tek worker. Bu klasördeki her test `e2e` olarak otomatik işaretlenir. **Test edilen uygulamanın
+  ve tarayıcının yaşam döngüsünün tek sahibi** `tests/e2e/conftest.py` içindeki session kapsamlı
+  fixture'lardır: gerçek giriş noktasını (`python -m app`) geçici, migrate edilmiş bir DB ile boş
+  bir portta başlatır, hazır olmasını bekler ve test başarısız olsa ya da zaman aşımına uğrasa bile
+  `finally` içinde süreci ve tarayıcıyı kapatır.
 - Hızlı/tam ayrımı **marker ile** yapılır (Two speeds, kural 4): `--fast` profili
   `pytest -m "not e2e"`, tam profil buna ek olarak `pytest -m e2e` çalıştırır. Yeni bir test
   her zaman ikisinden birine düşer.
-- Kapsama: pytest-cov yalnız `app/modules/*/internal/domain` için ölçülür;
-  `--cov-fail-under=90` (satır + dal). Genel bir yüzde kapısı yoktur.
+- Kapsama: `test` adımı `app/` için veri toplar; `domain-coverage` adımı raporu yalnız
+  `app/modules/*/internal/domain` ile sınırlar ve %90 (satır + dal) altında kırmızıdır. Henüz domain
+  dosyası yoksa kapı boştur ve yeşil geçer. Genel bir yüzde kapısı yoktur.
 - Test adlandırma: `docs/conventions.md`, Naming.
 
 ## What must be tested
