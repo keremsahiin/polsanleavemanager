@@ -1,0 +1,41 @@
+/* Landing page. Every text colour keeps a contrast ratio >= 4.5:1 on the background (WCAG 2.1 AA). */
+
+:root {
+  --background: #ffffff;
+  --text: #1a1a1a;
+  --text-muted: #4a4a4a;
+  --ok: #1b5e20;
+  --error: #b71c1c;
+}
+
+body {
+  margin: 0;
+  background: var(--background);
+  color: var(--text);
+  font-family: system-ui, "Segoe UI", Roboto, Arial, sans-serif;
+  line-height: 1.5;
+}
+
+main {
+  max-width: 40rem;
+  margin: 4rem auto;
+  padding: 0 1.5rem;
+}
+
+h1 {
+  font-size: 1.75rem;
+  margin: 0 0 1rem;
+}
+
+#system-status {
+  font-size: 1.125rem;
+  color: var(--text-muted);
+}
+
+#system-status[data-state="ready"] {
+  color: var(--ok);
+}
+
+#system-status[data-state="unavailable"] {
+  color: var(--error);
+}

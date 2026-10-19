@@ -41,7 +41,7 @@ def running_app(
 
 
 def add_test_route(app: FastAPI, path: str, endpoint: Callable[[], object]) -> None:
-    """Insert a test-only GET route ahead of every other route (the static mount catches all)."""
+    """Insert a test-only GET route ahead of every route the app defines."""
     app.router.routes.insert(0, APIRoute(path, endpoint, methods=["GET"]))
 
 

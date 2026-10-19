@@ -13,6 +13,8 @@ def _boom() -> object:
 
 
 REQUESTS: dict[str, Callable[[TestClient], httpx.Response]] = {
+    "page": lambda c: c.get("/"),
+    "asset": lambda c: c.get("/static/app.js"),
     "api": lambda c: c.get("/api/health/live"),
     "not_ready_503": lambda c: c.get("/api/health/ready"),
     "not_found_404": lambda c: c.get("/api/nope"),
@@ -23,7 +25,7 @@ REQUESTS: dict[str, Callable[[TestClient], httpx.Response]] = {
 
 @pytest.mark.parametrize("kind", sorted(REQUESTS))
 def test_every_response_carries_security_headers(database_path: Path, kind: str) -> None:
-    """AC-19 (API and error responses; the page is covered in test_static_page.py)."""
+    """AC-19: page, asset, API and every error response."""
     # An unmigrated path, so the readiness call yields a real 503.
     with running_app(database_path, lambda app: add_test_route(app, "/api/_test/boom", _boom)) as c:
         response = REQUESTS[kind](c)
