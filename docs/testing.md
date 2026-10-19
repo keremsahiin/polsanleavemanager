@@ -8,10 +8,34 @@
 - The whole suite runs inside `scripts/check` — one command, everywhere.
 
 ## Frameworks & layout
-<!-- Test framework(s), where tests live, naming pattern. -->
+- **pytest** tek test çalıştırıcısıdır; `uv run --locked pytest` ile çalışır.
+- `tests/unit/<modül>/` — saf domain kuralları (hakediş, gün sayımı, bakiye); I/O yok, `Clock`
+  sahte verilir.
+- `tests/integration/<modül>/` — FastAPI `TestClient` ile gerçek API + gerçek SQLite: her test
+  geçici bir DB dosyası alır, şema Alembic göçleriyle kurulur (`create_all` değil).
+- `tests/e2e/` — Playwright for Python (`pytest-playwright`), headless Chromium, tek worker;
+  `@pytest.mark.e2e` ile işaretlenir. **Test edilen uygulamanın yaşam döngüsünün tek sahibi**
+  `tests/e2e/conftest.py` içindeki session kapsamlı fixture'dır: uvicorn'u geçici DB ile boş bir
+  portta başlatır, hazır olmasını bekler ve test başarısız olsa ya da zaman aşımına uğrasa bile
+  `finally` içinde süreci sonlandırır.
+- Hızlı/tam ayrımı **marker ile** yapılır (Two speeds, kural 4): `--fast` profili
+  `pytest -m "not e2e"`, tam profil buna ek olarak `pytest -m e2e` çalıştırır. Yeni bir test
+  her zaman ikisinden birine düşer.
+- Kapsama: pytest-cov yalnız `app/modules/*/internal/domain` için ölçülür;
+  `--cov-fail-under=90` (satır + dal). Genel bir yüzde kapısı yoktur.
+- Test adlandırma: `docs/conventions.md`, Naming.
 
 ## What must be tested
-<!-- e.g. every business rule (BR-n), every boundary/forbidden dependency, critical flows E2E/smoke. -->
+- Her iş kuralı (BR-n, `docs/domain.md`) en az bir unit testle; testin adı veya docstring'i BR
+  numarasını taşır. Sınır değerleri zorunlu (ör. tam 5. ve 6. hizmet yılı, 18/50 yaş sınırı,
+  arife, tatile denk gelen izin).
+- Her domain invariant'ı (çakışan talep, döngüsüz hiyerarşi, değişmez hareket) bir testle.
+- Her API endpoint'i için: başarılı yol, doğrulama hatası ve **yetkisiz erişimin reddedildiği**
+  en az bir test (her rol için default-deny; şirket sınırı aşılamaz — `docs/security.md`).
+- Modül sınırları: `lint-imports` sözleşmeleri (`docs/architecture.md`).
+- Kritik akışlar e2e: giriş → izin talebi → yönetici onayı → bakiyenin düşmesi; ret akışı.
+- UI kriterleri: spec'teki "User experience" durumlarının (boş, yükleniyor, hata, başarı,
+  yetki yok) her biri ya e2e testiyle ya da PR'daki ekran görüntüsüyle (Evidence for UI criteria).
 
 ## Protected-tests rule
 Weakening asserts, deleting, or skipping tests to reach green is forbidden. A red test triggers
