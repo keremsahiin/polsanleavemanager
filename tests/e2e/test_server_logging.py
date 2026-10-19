@@ -31,11 +31,21 @@ def _send(url: str, request_id: str, method: str = "GET", body: bytes | None = N
         error.close()
 
 
+def _parse(line: str) -> dict[str, object]:
+    try:
+        entry: dict[str, object] = json.loads(line)
+    except json.JSONDecodeError:
+        pytest.fail(f"server wrote a non-JSON log line: {line!r}")
+    return entry
+
+
 def _entries_once_logged(server: LiveServer, request_ids: set[str]) -> list[dict[str, object]]:
     deadline = time.monotonic() + 10
     while True:
-        lines = server.log_file.read_text("utf-8").splitlines()
-        entries = [json.loads(line) for line in lines if line.strip()]  # every line must be JSON
+        # The server keeps writing while we read: only lines it has finished (ending in a newline)
+        # are parsed; every one of those must be JSON (review 0001 F2).
+        lines = server.log_file.read_text("utf-8").splitlines(keepends=True)
+        entries = [_parse(line) for line in lines if line.endswith("\n") and line.strip()]
         if request_ids <= {e.get("correlation_id") for e in entries} or time.monotonic() > deadline:
             return entries
         time.sleep(0.1)
