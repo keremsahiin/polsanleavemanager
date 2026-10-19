@@ -34,7 +34,8 @@ def test_host_and_port_can_be_overridden() -> None:
     assert (settings.host, settings.port) == ("0.0.0.0", 8123)  # noqa: S104
 
 
-@pytest.mark.parametrize("port", ["abc", "0", "65536", "-1", "80.5"])
+# "²" and "٨٠٠٠" are str.isdigit() but not ASCII digits (review 0001 #7).
+@pytest.mark.parametrize("port", ["abc", "0", "65536", "-1", "80.5", "²", "٨٠٠٠"])
 def test_invalid_port_raises(port: str) -> None:
     with pytest.raises(SettingsError, match="PLM_PORT"):
         load_settings({DATABASE_PATH_VAR: "plm.db", "PLM_PORT": port})

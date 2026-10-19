@@ -40,6 +40,7 @@ def _parse_port(environ: Mapping[str, str]) -> int:
     raw_port = environ.get(PORT_VAR, "").strip()
     if not raw_port:
         return DEFAULT_PORT
-    if not raw_port.isdigit() or not 1 <= int(raw_port) <= 65535:
+    # isascii: str.isdigit() also accepts "²" (int() then raises) and other scripts' digits.
+    if not (raw_port.isascii() and raw_port.isdigit()) or not 1 <= int(raw_port) <= 65535:
         raise SettingsError(f"{PORT_VAR} 1 ile 65535 arasında bir tamsayı olmalı.")
     return int(raw_port)
