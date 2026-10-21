@@ -25,19 +25,20 @@ def test_problem_has_rfc9457_fields_and_code() -> None:
 
 
 @pytest.mark.parametrize(
-    ("problem", "status"),
+    ("problem", "status", "title"),
     [
-        (not_found(), 404),
-        (method_not_allowed(), 405),
-        (internal_error("c1"), 500),
-        (not_ready(), 503),
+        (not_found(), 404, "Bulunamadı"),
+        (method_not_allowed(), 405, "Yöntem desteklenmiyor"),
+        (internal_error("c1"), 500, "Beklenmeyen bir hata oluştu"),
+        (not_ready(), 503, "Hizmet hazır değil"),
     ],
 )
-def test_platform_problems_are_turkish_and_coded(problem: Problem, status: int) -> None:
+def test_platform_problems_are_turkish_and_coded(problem: Problem, status: int, title: str) -> None:
+    """AC-12..14 (VERIFY V2): the Turkish user-facing title is part of the contract."""
     assert problem.status == status
     assert problem.code.startswith("platform.")
-    assert problem.title
-    assert problem.detail
+    assert problem.title == title
+    assert problem.detail.endswith(".")
 
 
 def test_internal_error_carries_only_the_correlation_id() -> None:

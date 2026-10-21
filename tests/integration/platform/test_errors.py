@@ -41,6 +41,7 @@ def test_unknown_api_path_returns_problem_json(migrated_database: Path) -> None:
     assert body["status"] == 404
     assert body["code"] == "platform.not_found"
     assert body["title"] == "Bulunamadı"
+    assert body["detail"] == "İstenen adres bulunamadı."
 
 
 def test_unsupported_method_returns_405_problem_json(migrated_database: Path) -> None:
@@ -53,6 +54,8 @@ def test_unsupported_method_returns_405_problem_json(migrated_database: Path) ->
     body = response.json()
     assert set(body) == PROBLEM_KEYS
     assert body["code"] == "platform.method_not_allowed"
+    assert body["title"] == "Yöntem desteklenmiyor"
+    assert body["detail"] == "Bu adres, istekte kullanılan yöntemi desteklemiyor."
 
 
 def test_unexpected_error_returns_500_without_details(migrated_database: Path) -> None:
@@ -64,6 +67,11 @@ def test_unexpected_error_returns_500_without_details(migrated_database: Path) -
     body = response.json()
     assert set(body) == PROBLEM_KEYS | {"correlation_id"}
     assert body["code"] == "platform.internal_error"
+    assert body["title"] == "Beklenmeyen bir hata oluştu"
+    assert body["detail"] == (
+        "İsteğiniz işlenirken beklenmeyen bir hata oluştu. Sorun sürerse bu kimlikle "
+        "destek ekibine başvurun."
+    )
     assert body["correlation_id"] == response.headers["x-request-id"]
     for leak in ("gizli-detay", "plm.db", "RuntimeError", "Traceback", "test_errors.py"):
         assert leak not in response.text
