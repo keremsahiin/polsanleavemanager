@@ -30,7 +30,7 @@ Uygulama ayarlarını yalnız ortam değişkenlerinden okur; `.env` otomatik yü
 Şemayı yalnız Alembic göçleri değiştirir; uygulama başlarken şemaya dokunmaz ve var olmayan bir
 veritabanı dosyasını oluşturmaz.
 ```sh
-uv run --env-file .env alembic upgrade head            # dosyayı oluşturur / en güncel sürüme getirir
+uv run --env-file .env alembic upgrade head            # dosyayı oluşturur / en güncel sürüme getirir (başarıda çıktı yok)
 uv run --env-file .env alembic revision -m "<açıklama>" # yeni göç (migrations/versions/)
 ```
 
@@ -41,6 +41,7 @@ uv run --env-file .env python -m app
 Tarayıcıda `http://127.0.0.1:8000` açılış sayfasını gösterir. Sağlık sinyalleri:
 `/api/health/live` (süreç ayakta) ve `/api/health/ready` (veritabanı erişilebilir ve şema
 güncel; değilse 503). Tek süreç, tek worker (ADR 0002); log'lar stdout'a satır başına bir JSON.
+Durdurmak için çalıştığı terminalde Ctrl+C.
 
 ## Verify
 ```sh
