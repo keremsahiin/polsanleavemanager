@@ -1,27 +1,40 @@
 # Git
 
-> **Template — adjust at bootstrap.** Defaults below are safe; loosen consciously, not accidentally.
+> Bootstrap'ta (2026-10-19) ANEW'in güvenli varsayılanları olduğu gibi kabul edildi.
+> Gevşetmek bilinçli bir karar (ADR) gerektirir.
 
 ## Branching
-- `feature/<spec-no>-<short-name>` — **no branch without a spec.** Also for CHANGE-lane mini-specs.
-- Refactors: `refactor/<spec-no>-<short-name>` (mini-spec with Changed behavior = none).
-- Fixes: `fix/<report-id>-<short-name>` (bug fixes carry a report, not a spec number);
-  incidents: `incident/<date>-<short-name>`; trivial changes: `trivial/<short-name>` (see below).
+- Varsayılan branch: `main`.
+- `feature/<spec-no>-<short-name>` — **spec yoksa branch da yok.** CHANGE lane mini-spec'leri de
+  bu kalıbı kullanır.
+- Refactor'lar: `refactor/<spec-no>-<short-name>` (mini-spec, Changed behavior = none).
+- Düzeltmeler: `fix/<report-id>-<short-name>` (bug fix'ler spec numarası değil rapor taşır);
+  olaylar: `incident/<date>-<short-name>`; önemsiz değişiklikler: `trivial/<short-name>`.
+- Branch adları İngilizce, küçük harf, kebab-case (`docs/conventions.md`).
 
 ## Commits
-- Conventional Commits, with a plan reference: `feat(catalog): paging endpoint [plan 0001/3]`.
-- Agent commits follow the same standard: the agent writes the message, the human approves.
+- Conventional Commits, İngilizce, plan referansıyla: `feat(leave): approval endpoint [plan 0002/3]`.
+  Scope = modül adı (`identity`, `organization`, `calendar`, `leave`, `audit`) veya `ui`, `build`,
+  `docs`.
+- Ajan commit'leri aynı standarda uyar: mesajı ajan yazar, insan onaylar.
 
 ## Forbidden
-- Direct commits to the default branch.
-- Force push, history rewriting on shared branches. Undo = `git revert` (see recovery R-11).
+- `main`'e doğrudan commit.
+- Paylaşılan branch'lerde force push ve geçmişi yeniden yazma. Geri alma = `git revert`
+  (recovery R-11).
+- Veritabanı dosyalarını, `.env`'yi veya gerçek kişisel veri içeren fixture'ları commit'lemek.
+
+## Enforcement on GitHub
+- `main` için branch protection açılır: PR zorunlu, en az 1 onay, `check` ve `doctor` job'ları
+  zorunlu status check, force push ve silme kapalı. (Repo ayarıdır — repo sahibi uygular.)
 
 ## Trivial changes
-<!-- Set at bootstrap. Applies only to requests the change-request triage rubric
+<!-- Applies only to requests the change-request triage rubric
      (workflows/change-request.md) classifies as TRIVIAL: no acceptance criterion changes, no shared code. -->
-- Policy: **(1) PR + one reviewer, no spec** — default; alternatives: (2) direct commit allowed on a
-  `trivial/<short-name>` branch · (3) everything goes through a mini-spec (`specs/TEMPLATE-mini.md`).
+- Policy: **(1) PR + one reviewer, no spec** — bootstrap'ta seçildi (2026-10-19).
+  `trivial/<short-name>` branch'i → PR → bir reviewer onayı → squash-merge.
 - Always: one narrow commit, `scripts/check` green. A second file or a new test means re-triage.
 
 ## Pull requests
 - PR template checklist completed; `scripts/check` green in CI; squash-merge.
+- PR açıklaması Türkçe; kanıt tablosu `CHECK GREEN (full, …)` satırını gösterir (fast değil).

@@ -14,3 +14,22 @@ Thumbs.db
 
 # Claude Code personal settings (shared settings.json IS committed after init)
 .claude/settings.local.json
+
+# Python toolchain (uv / ruff / mypy / pytest)
+.venv/
+__pycache__/
+*.py[cod]
+.mypy_cache/
+.ruff_cache/
+.pytest_cache/
+.import_linter_cache/
+.coverage
+.coverage.*
+htmlcov/
+
+# Local SQLite databases hold personal data (docs/security.md) — never commit them
+*.db
+*.sqlite
+*.sqlite3
+*.db-wal
+*.db-shm

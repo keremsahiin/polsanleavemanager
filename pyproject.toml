@@ -1,0 +1,72 @@
+[project]
+name = "polsanleavemanager"
+version = "0.1.0"
+description = "Polsan şirketler grubu için izin yönetim sistemi"
+requires-python = ">=3.14,<3.15"
+dependencies = []
+
+[tool.uv]
+# The app runs from source; it is not built or published as a package.
+package = false
+
+[tool.ruff]
+target-version = "py314"
+line-length = 100
+src = ["app", "tests"]
+# Python files only: ruff would otherwise format Python blocks inside docs/specs Markdown.
+include = ["*.py", "*.pyi", "**/pyproject.toml"]
+
+[tool.ruff.lint]
+# DTZ enforces timezone-aware datetimes (docs/conventions.md, Data rules); S = bandit security rules.
+select = ["E", "W", "F", "I", "B", "UP", "S", "SIM", "DTZ", "RUF"]
+# UI text is Turkish (docs/conventions.md, Language): the dotless i is a letter, not a confusable.
+allowed-confusables = ["ı"]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = ["S101"]
+
+[tool.mypy]
+python_version = "3.14"
+strict = true
+packages = ["app"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "--strict-markers"
+markers = [
+    "e2e: browser end-to-end test (full profile only; docs/testing.md, Two speeds)",
+]
+
+[dependency-groups]
+dev = [
+    "import-linter>=2.15",
+    "mypy>=2.4.0",
+    "ruff>=0.17.1",
+]
+
+# Module boundaries (docs/architecture.md, Forbidden dependencies) — checked by `lint-imports`.
+[tool.importlinter]
+root_package = "app"
+include_external_packages = true
+
+[[tool.importlinter.contracts]]
+name = "Module dependencies point one way: leave -> calendar|identity -> organization -> audit"
+type = "layers"
+layers = [
+    "app.modules.leave",
+    "app.modules.calendar | app.modules.identity",
+    "app.modules.organization",
+    "app.modules.audit",
+]
+
+[[tool.importlinter.contracts]]
+name = "Modules use each other only through public.py, never another module's internal package"
+type = "forbidden"
+source_modules = ["app.modules.*"]
+forbidden_modules = ["app.modules.*.internal"]
+
+[[tool.importlinter.contracts]]
+name = "Domain layer is pure: no web framework, ORM, database driver or HTTP client"
+type = "forbidden"
+source_modules = ["app.modules.*.internal.domain"]
+forbidden_modules = ["fastapi", "starlette", "sqlalchemy", "alembic", "sqlite3", "uvicorn", "httpx"]
