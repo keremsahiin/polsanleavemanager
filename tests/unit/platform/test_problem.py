@@ -25,20 +25,38 @@ def test_problem_has_rfc9457_fields_and_code() -> None:
 
 
 @pytest.mark.parametrize(
-    ("problem", "status", "title"),
+    ("problem", "status", "title", "detail"),
     [
-        (not_found(), 404, "Bulunamadı"),
-        (method_not_allowed(), 405, "Yöntem desteklenmiyor"),
-        (internal_error("c1"), 500, "Beklenmeyen bir hata oluştu"),
-        (not_ready(), 503, "Hizmet hazır değil"),
+        (not_found(), 404, "Bulunamadı", "İstenen adres bulunamadı."),
+        (
+            method_not_allowed(),
+            405,
+            "Yöntem desteklenmiyor",
+            "Bu adres, istekte kullanılan yöntemi desteklemiyor.",
+        ),
+        (
+            internal_error("c1"),
+            500,
+            "Beklenmeyen bir hata oluştu",
+            "İsteğiniz işlenirken beklenmeyen bir hata oluştu. Sorun sürerse bu kimlikle "
+            "destek ekibine başvurun.",
+        ),
+        (
+            not_ready(),
+            503,
+            "Hizmet hazır değil",
+            "Sistem şu anda istekleri karşılamaya hazır değil.",
+        ),
     ],
 )
-def test_platform_problems_are_turkish_and_coded(problem: Problem, status: int, title: str) -> None:
-    """AC-12..14 (VERIFY V2): the Turkish user-facing title is part of the contract."""
+def test_platform_problems_are_turkish_and_coded(
+    problem: Problem, status: int, title: str, detail: str
+) -> None:
+    """AC-12..14, R-5 (VERIFY V2, review F-1): the Turkish title and detail are the contract."""
     assert problem.status == status
     assert problem.code.startswith("platform.")
     assert problem.title == title
-    assert problem.detail.endswith(".")
+    assert problem.detail == detail
 
 
 def test_internal_error_carries_only_the_correlation_id() -> None:
