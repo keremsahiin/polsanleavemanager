@@ -3,7 +3,12 @@ name = "polsanleavemanager"
 version = "0.1.0"
 description = "Polsan şirketler grubu için izin yönetim sistemi"
 requires-python = ">=3.14,<3.15"
-dependencies = []
+dependencies = [
+    "alembic>=1.20.0",
+    "fastapi>=0.148.0",
+    "sqlalchemy>=2.1.5",
+    "uvicorn>=0.54.0",
+]
 
 [tool.uv]
 # The app runs from source; it is not built or published as a package.
@@ -12,7 +17,7 @@ package = false
 [tool.ruff]
 target-version = "py314"
 line-length = 100
-src = ["app", "tests"]
+src = ["."]
 # Python files only: ruff would otherwise format Python blocks inside docs/specs Markdown.
 include = ["*.py", "*.pyi", "**/pyproject.toml"]
 
@@ -32,15 +37,27 @@ packages = ["app"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-addopts = "--strict-markers"
+pythonpath = ["."]
+# importlib mode: test files may share a basename across tests/unit and tests/integration.
+addopts = "--strict-markers --import-mode=importlib"
 markers = [
     "e2e: browser end-to-end test (full profile only; docs/testing.md, Two speeds)",
 ]
 
+# Data is collected for all of app/; the gate (domain-coverage step in scripts/check.conf) reports
+# only app/modules/*/internal/domain (docs/testing.md, Frameworks & layout).
+[tool.coverage.run]
+branch = true
+source = ["app"]
+
 [dependency-groups]
 dev = [
+    "httpx>=0.28.1",
     "import-linter>=2.15",
     "mypy>=2.4.0",
+    "playwright>=1.64.0",
+    "pytest>=9.1.1",
+    "pytest-cov>=7.1.0",
     "ruff>=0.17.1",
 ]
 
@@ -70,3 +87,9 @@ name = "Domain layer is pure: no web framework, ORM, database driver or HTTP cli
 type = "forbidden"
 source_modules = ["app.modules.*.internal.domain"]
 forbidden_modules = ["fastapi", "starlette", "sqlalchemy", "alembic", "sqlite3", "uvicorn", "httpx"]
+
+[[tool.importlinter.contracts]]
+name = "Shared platform code never depends on business modules"
+type = "forbidden"
+source_modules = ["app.platform"]
+forbidden_modules = ["app.modules"]

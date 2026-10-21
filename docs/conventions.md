@@ -67,4 +67,5 @@
 - `mypy` (`strict = true`, `app/`) — tüm fonksiyonlar tipli, `Any` sızıntısı yok.
 - `lint-imports` — modül sınırları ve saf domain (`docs/architecture.md`, Forbidden dependencies).
 - `node --check` — `app/` altındaki her `.js` dosyasının sözdizimi.
-- pytest + coverage (walking skeleton spec'iyle etkinleşir) — `docs/testing.md`.
+- `pytest` — `test [fast]` (unit + integration, `-m "not e2e"`) ve `e2e` (yalnız full);
+  `domain-coverage` — domain kodu için %90 kapısı (`docs/testing.md`).

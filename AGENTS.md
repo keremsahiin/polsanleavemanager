@@ -32,6 +32,7 @@ modüler monolit, build'siz HTML/CSS/JS, SQLite, tek sunucu (ADR 0001, 0002). Bo
 | Testing rules | `docs/testing.md` |
 | Security rules | `docs/security.md` |
 | Git & branching rules | `docs/git.md` |
+| Developer setup: run locally, env vars, migrations | `docs/development.md` |
 | Decisions (ADRs) · roles (who may do what) | `docs/decisions/` · `docs/roles/` |
 | Specs & plans | `specs/active/` · `specs/plans/` · shipped → `specs/done/` |
 | Processes & gates · prompts & recovery ramps | `workflows/` · `prompts/` |

@@ -19,12 +19,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      # Toolchain for the active scripts/check.conf steps (bootstrap, 2026-10-19): uv + Python 3.14.
-      # node (js-syntax step) is preinstalled on ubuntu-latest. Playwright browsers and the
-      # pip-audit job arrive with the walking-skeleton spec, together with the test/e2e steps.
+      # Toolchain for scripts/check.conf: uv + Python 3.14; node (js-syntax) is preinstalled on
+      # ubuntu-latest; Chromium + its system libraries for the e2e step (spec 0001).
       - uses: astral-sh/setup-uv@v6
       - name: Python 3.14
         run: uv python install 3.14
+      - name: Playwright Chromium (e2e step)
+        run: uv run --locked playwright install --with-deps chromium
       # --fast is for the inner loop only; CI always runs the full contract (docs/testing.md).
       - name: Verification contract
         run: |
@@ -33,3 +34,21 @@ jobs:
           else
             echo "scripts/check.conf not present yet (pre-bootstrap) — skipping."
           fi
+
+  # Known-vulnerability scan of the locked dependencies (docs/security.md, Dependencies). Separate
+  # from check because it needs the network. Red on a finding, but deliberately NOT a required
+  # status check: a new advisory in a transitive dependency must not block unrelated PRs (spec 0001
+  # R-14) — it is triaged instead.
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+      - name: Export locked requirements (hashed)
+        run: >-
+          uv export --locked --format requirements-txt --no-emit-project --all-groups
+          -o "$RUNNER_TEMP/requirements-audit.txt"
+      - name: pip-audit
+        run: >-
+          uvx pip-audit==2.10.1 --strict --disable-pip
+          --requirement "$RUNNER_TEMP/requirements-audit.txt"
