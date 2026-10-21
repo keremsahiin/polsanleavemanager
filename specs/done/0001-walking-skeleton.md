@@ -1,6 +1,6 @@
 # Spec 0001 — Uygulama iskeleti (walking skeleton)
 
-- Status: In progress
+- Status: Shipped
 - Mode: lite
 - Plan: `specs/plans/0001-plan.md`
 
@@ -144,17 +144,17 @@ kurmaz. Bilinçli olarak yapılmayan: hiçbir iş kuralı, giriş/oturum veya iz
   açık taraması ayrı bir job olarak çalışır ve bilinen bir açık bulduğunda kırmızı olur.
 
 ## Definition of Done
-- [ ] Every acceptance criterion mapped to proof (test or reproducible observation)
-- [ ] `scripts/check` green
-- [ ] Independent review done; real findings fixed, noise rejected with written rationale
-- [ ] Docs / ADRs updated if behavior or architecture changed
-- [ ] Spec moved to `specs/done/` (it becomes immutable there)
+- [x] Every acceptance criterion mapped to proof (test or reproducible observation) — QA tablosu PR #2'de; AC-31 PR #2'nin CI koşularıyla
+- [x] `scripts/check` green — CHECK GREEN (full, 8 steps, 16 s)
+- [x] Independent review done; real findings fixed, noise rejected with written rationale — `specs/plans/0001-plan.md` triage bölümleri
+- [x] Docs / ADRs updated if behavior or architecture changed — architecture, conventions, testing, security, development; ADR 0003
+- [x] Spec moved to `specs/done/` (it becomes immutable there)
 
 ## Scorecard (fill at ship — honest numbers make the process improvable)
 | Metric | Value |
 |---|---|
-| Spec revisions | |
-| Fix rounds | |
-| Review findings: real / noise | |
-| Regressions introduced | |
-| Bugs escaped to production | |
+| Spec revisions | 1 (taslakta öz-eleştiri: 7 boşluk eklendi); onaydan sonra 0 |
+| Fix rounds | 5 (review #1/#2/#3/#5/#7 · F1/F2 · VERIFY V1–V3 · F-1 · CI audit A1) |
+| Review findings: real / noise | 8 / 4 (ayrıca QA: 3 real; CI audit: 1 real) |
+| Regressions introduced | 0 |
+| Bugs escaped to production | 0 (ship anında) |
