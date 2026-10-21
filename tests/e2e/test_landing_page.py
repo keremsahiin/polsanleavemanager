@@ -2,6 +2,7 @@
 
 import re
 from collections.abc import Callable
+from datetime import UTC, datetime, timedelta
 
 import pytest
 from playwright.sync_api import Page, Route, expect
@@ -67,8 +68,14 @@ def test_shows_unreachable_on_network_error(page: Page, base_url: str) -> None:
 
 
 def test_shows_unreachable_after_5s_timeout(page: Page, base_url: str) -> None:
-    """AC-24: still checking just before 5 s, unreachable once 5 s have passed."""
-    page.clock.install()
+    """AC-24: still checking just before 5 s, unreachable once 5 s have passed.
+
+    The clock is paused before the page loads, so page time moves only through run_for: a
+    timeout longer than 5 s can no longer pass by waiting in real time (VERIFY V1).
+    """
+    start = datetime(2026, 1, 1, tzinfo=UTC)
+    page.clock.install(time=start)
+    page.clock.pause_at(start + timedelta(seconds=1))
     page.route(READY_REQUEST, _never_answer)
     page.goto(base_url)
     status = page.locator(STATUS)
